@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="SmartStock.Application/SmartStock.Application.csproj" />
+    <Project Path="SmartStock.Domain/SmartStock.Domain.csproj" />
+    <Project Path="SmartStock.Infrastructure/SmartStock.Infrastructure.csproj" />
+    <Project Path="SmartStock.Web/SmartStock.Web.csproj" />
+  </Folder>
+</Solution>
