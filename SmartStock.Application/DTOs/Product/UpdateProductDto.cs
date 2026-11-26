@@ -10,7 +10,7 @@ namespace SmartStock.Application.DTOs.Product
 
         [Required]
         [StringLength(150)]
-        public string Name { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]

@@ -24,7 +24,7 @@ namespace SmartStock.Infrastructure.Repositories
 
                 query = query.Where(x =>
                     x.SKU.Contains(search) ||
-                    x.Name.Contains(search) ||
+                    x.ProductName.Contains(search) ||
                     x.Category.Contains(search));
             }
 
@@ -50,8 +50,8 @@ namespace SmartStock.Infrastructure.Repositories
                     : query.OrderBy(x => x.SKU),
 
                 "name" => request.SortDescending
-                    ? query.OrderByDescending(x => x.Name)
-                    : query.OrderBy(x => x.Name),
+                    ? query.OrderByDescending(x => x.ProductName)
+                    : query.OrderBy(x => x.ProductName),
 
                 "category" => request.SortDescending
                     ? query.OrderByDescending(x => x.Category)
@@ -70,8 +70,8 @@ namespace SmartStock.Infrastructure.Repositories
                     : query.OrderBy(x => x.CreatedAtUtc),
 
                 _ => request.SortDescending
-                    ? query.OrderByDescending(x => x.Name)
-                    : query.OrderBy(x => x.Name)
+                    ? query.OrderByDescending(x => x.ProductName)
+                    : query.OrderBy(x => x.ProductName)
             };
 
             // Total records before pagination

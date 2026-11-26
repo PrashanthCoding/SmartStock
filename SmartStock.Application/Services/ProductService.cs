@@ -64,18 +64,22 @@ public class ProductService : IProductService
 
         var product = new Product
         {
-            SKU = sku,
-            Name = request.Name.Trim(),
+            SKU = request.SKU.Trim().ToUpperInvariant(),
+            ProductName = request.ProductName.Trim(),
             Category = request.Category.Trim(),
-            Description = request.Description?.Trim(),
+            Description = request.Description,
             UnitPrice = request.UnitPrice,
             ReorderLevel = request.ReorderLevel,
-            IsActive = true
+            IsActive = true,
+
+            // Automatically create initial inventory
+            Inventory = new Inventory
+            {
+                Quantity = 0
+            }
         };
 
-        await _productRepository.AddAsync(
-            product,
-            cancellationToken);
+        await _productRepository.AddAsync(product, cancellationToken);
 
         await _productRepository.SaveChangesAsync(cancellationToken);
 
@@ -110,7 +114,7 @@ public class ProductService : IProductService
         }
 
         product.SKU = sku;
-        product.Name = request.Name.Trim();
+        product.ProductName = request.ProductName.Trim();
         product.Category = request.Category.Trim();
         product.Description = request.Description?.Trim();
         product.UnitPrice = request.UnitPrice;
@@ -153,7 +157,7 @@ public class ProductService : IProductService
         {
             Id = product.Id,
             SKU = product.SKU,
-            Name = product.Name,
+            ProductName = product.ProductName,
             Category = product.Category,
             Description = product.Description,
             UnitPrice = product.UnitPrice,

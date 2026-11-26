@@ -28,7 +28,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "SmartStock Management API"
     });
 
-    // JWT Bearer Security Definition
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -39,12 +38,10 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enter your JWT token here."
     });
 
-    // JWT Security Requirement
     options.AddSecurityRequirement(document =>
         new OpenApiSecurityRequirement
         {
-            [new OpenApiSecuritySchemeReference("Bearer", document)] =
-                new List<string>()
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
         });
 });
 
@@ -66,7 +63,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngular", policy =>
     {
         policy
-            .WithOrigins("http://localhost:4200")
+            .WithOrigins(
+                "http://localhost:63062",
+                "http://localhost:4200"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -89,10 +89,11 @@ if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) ||
 }
 
 if (string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
-    string.IsNullOrWhiteSpace(jwtSettings.Audience))
+    string.IsNullOrWhiteSpace(jwtSettings.Audience) ||
+    jwtSettings.ExpiryInMinutes <= 0)
 {
     throw new InvalidOperationException(
-        "JWT Issuer or Audience is missing.");
+        "JWT configuration is invalid.");
 }
 
 // ======================================
@@ -148,6 +149,7 @@ app.UseGlobalExceptionHandling();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint(
@@ -160,16 +162,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// CORS
 app.UseCors("AllowAngular");
 
-// Authentication
 app.UseAuthentication();
 
-// Authorization
 app.UseAuthorization();
 
-// Controllers
 app.MapControllers();
 
 app.Run();

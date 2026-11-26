@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using SmartStock.Infrastructure.Identity;
+using SmartStock.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,8 +16,7 @@ public class JwtTokenGenerator
         _jwtSettings = jwtSettings.Value;
     }
 
-    public (string Token, DateTime ExpiresAtUtc) GenerateToken(
-        ApplicationUser user)
+    public (string Token, DateTime ExpiresAtUtc) GenerateToken(User user)
     {
         if (string.IsNullOrWhiteSpace(_jwtSettings.SecretKey) ||
             Encoding.UTF8.GetByteCount(_jwtSettings.SecretKey) < 32)
@@ -34,17 +33,14 @@ public class JwtTokenGenerator
                 "JWT configuration is invalid.");
         }
 
-        var expiresAt = DateTime.UtcNow.AddMinutes(
-            _jwtSettings.ExpiryInMinutes);
+        var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryInMinutes);
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            new Claim(ClaimTypes.Name, user.FullName ?? string.Empty),
-            new Claim(
-                JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         var key = new SymmetricSecurityKey(

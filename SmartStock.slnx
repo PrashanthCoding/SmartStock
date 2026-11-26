@@ -3,6 +3,7 @@
     <Project Path="SmartStock.Application/SmartStock.Application.csproj" />
     <Project Path="SmartStock.Domain/SmartStock.Domain.csproj" />
     <Project Path="SmartStock.Infrastructure/SmartStock.Infrastructure.csproj" />
+    <Project Path="SmartStock.Tests/SmartStock.Tests.csproj" Id="15f3ce55-8d69-4036-ac70-b6bd0980b73a" />
     <Project Path="SmartStock.Web/SmartStock.Web.csproj" />
   </Folder>
 </Solution>
