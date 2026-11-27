@@ -140,7 +140,7 @@ Install the following before running the application:
 - .NET 10 SDK
 - Node.js (compatible with your Angular version)
 - Angular CLI
-- PostgreSQL
+- Microsoft SQL Server
 - Visual Studio 2026
 - Visual Studio Code
 
