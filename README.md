@@ -11,7 +11,7 @@ SmartStock is designed with a layered architecture to provide maintainable, scal
 The project contains:
 - **Backend:** ASP.NET Core Web API (.NET 10)
 - **Frontend:** Angular
-- **Database:** PostgreSQL
+- **Database:** Microsoft SQL Server
 - **ORM:** Entity Framework Core
 - **Real-time communication:** SignalR
 - **External market data:** Binance WebSocket API
