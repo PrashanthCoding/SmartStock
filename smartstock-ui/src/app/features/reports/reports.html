@@ -1,1 +1,260 @@
-<p>reports works!</p>
+<div class="reports-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1>Reports & Analytics</h1>
+      <p>Monitor your inventory, orders and business performance.</p>
+    </div>
+
+    <div class="header-actions">
+      <span class="last-updated" *ngIf="lastUpdated">
+        Updated: {{ lastUpdated | date: 'shortTime' }}
+      </span>
+
+      <button class="refresh-btn" (click)="loadReports()" [disabled]="loading">
+        <span>{{ loading ? 'Loading...' : '↻ Refresh' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="loadReports()">Retry</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading && !dashboard">
+    <div class="loader"></div>
+    <p>Loading reports...</p>
+  </div>
+
+  <ng-container *ngIf="dashboard as report">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card products-card">
+        <div class="card-top">
+          <div class="card-icon">📦</div>
+          <span class="card-label">Active Products</span>
+        </div>
+        <h2>{{ report.totalActiveProducts | number }}</h2>
+        <p>Available product records</p>
+      </div>
+
+      <div class="summary-card value-card">
+        <div class="card-top">
+          <div class="card-icon">₹</div>
+          <span class="card-label">Inventory Value</span>
+        </div>
+        <h2>{{ report.totalInventoryValue | currency: 'INR' : 'symbol' : '1.0-2' }}</h2>
+        <p>Total inventory value</p>
+      </div>
+
+      <div class="summary-card orders-card">
+        <div class="card-top">
+          <div class="card-icon">🛒</div>
+          <span class="card-label">Total Orders</span>
+        </div>
+        <h2>{{ report.totalOrders | number }}</h2>
+        <p>Customer orders</p>
+      </div>
+
+      <div class="summary-card lowstock-card">
+        <div class="card-top">
+          <div class="card-icon">⚠️</div>
+          <span class="card-label">Low Stock Items</span>
+        </div>
+        <h2>{{ report.lowStockCount | number }}</h2>
+        <p>Products requiring attention</p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <!-- Monthly Orders Chart -->
+      <section class="report-card">
+        <div class="section-header">
+          <div>
+            <h3>Monthly Orders</h3>
+            <p>Order volume by month</p>
+          </div>
+          <span class="chart-icon">📊</span>
+        </div>
+
+        <div class="empty-state" *ngIf="!report.monthlyOrderSummary.length">
+          No monthly order data available.
+        </div>
+
+        <div class="monthly-chart" *ngIf="report.monthlyOrderSummary.length">
+          <div class="chart-y-label">Orders</div>
+
+          <div class="bar-chart">
+            <div
+              class="bar-item"
+              *ngFor="let item of report.monthlyOrderSummary; trackBy: trackByMonth"
+            >
+              <span class="bar-value">{{ item.totalOrders }}</span>
+
+              <div class="bar-track">
+                <div class="bar-fill" [style.height.%]="getMonthlyBarWidth(item.totalOrders)"></div>
+              </div>
+
+              <span class="bar-label">{{ item.monthName }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Order Status Chart -->
+      <section class="report-card">
+        <div class="section-header">
+          <div>
+            <h3>Order Status Overview</h3>
+            <p>Distribution of customer orders</p>
+          </div>
+          <span class="chart-icon">📈</span>
+        </div>
+
+        <div class="empty-state" *ngIf="!report.orderStatusSummary.length">
+          No order status data available.
+        </div>
+
+        <div class="status-chart" *ngIf="report.orderStatusSummary.length">
+          <div class="status-item" *ngFor="let item of report.orderStatusSummary">
+            <div class="status-info">
+              <span class="status-dot" [ngClass]="getStatusClass(item.status)"> </span>
+
+              <span class="status-name">{{ item.status }}</span>
+
+              <strong>{{ item.count }}</strong>
+            </div>
+
+            <div class="status-track">
+              <div
+                class="status-fill"
+                [ngClass]="getStatusClass(item.status)"
+                [style.width.%]="getStatusBarWidth(item.count)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Low Stock Products -->
+    <section class="report-card table-card">
+      <div class="section-header">
+        <div>
+          <h3>Low Stock Products</h3>
+          <p>Products approaching or below reorder levels</p>
+        </div>
+
+        <span class="count-badge"> {{ report.lowStockProducts.length || 0 }} Items </span>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Available Qty</th>
+              <th>Reorder Level</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let product of report.lowStockProducts; trackBy: trackByProduct">
+              <td class="sku">{{ product.sku }}</td>
+
+              <td class="product-name">
+                {{ product.productName }}
+              </td>
+
+              <td>{{ product.category }}</td>
+
+              <td class="quantity">
+                {{ product.availableQuantity | number: '1.0-2' }}
+              </td>
+
+              <td>{{ product.reorderLevel }}</td>
+
+              <td>
+                <span
+                  class="stock-badge"
+                  [ngClass]="product.availableQuantity <= 0 ? 'out-stock' : 'low-stock'"
+                >
+                  {{ product.availableQuantity <= 0 ? 'Out of Stock' : 'Low Stock' }}
+                </span>
+              </td>
+            </tr>
+
+            <tr *ngIf="!report.lowStockProducts.length">
+              <td colspan="6" class="empty-table">No low-stock products found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recent Movements -->
+    <section class="report-card table-card">
+      <div class="section-header">
+        <div>
+          <h3>Recent Stock Movements</h3>
+          <p>Latest inventory transactions</p>
+        </div>
+
+        <span class="count-badge"> {{ report.recentMovements.length || 0 }} Records </span>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Movement Type</th>
+              <th>Quantity</th>
+              <th>Previous Stock</th>
+              <th>Current Stock</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let movement of report.recentMovements; trackBy: trackByMovement">
+              <td class="product-name">
+                {{ movement.productName }}
+              </td>
+
+              <td class="sku">{{ movement.sku }}</td>
+
+              <td>
+                <span class="movement-badge" [ngClass]="getMovementClass(movement.movementType)">
+                  {{ movement.movementType }}
+                </span>
+              </td>
+
+              <td class="quantity">
+                {{ movement.quantity | number: '1.0-2' }}
+              </td>
+
+              <td>{{ movement.quantityBefore | number: '1.0-2' }}</td>
+
+              <td>{{ movement.quantityAfter | number: '1.0-2' }}</td>
+
+              <td>{{ movement.createdAtUtc | date: 'dd MMM yyyy, hh:mm a' }}</td>
+            </tr>
+
+            <tr *ngIf="!report.recentMovements.length">
+              <td colspan="7" class="empty-table">No recent stock movements found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

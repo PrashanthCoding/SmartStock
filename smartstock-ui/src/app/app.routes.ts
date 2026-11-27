@@ -6,6 +6,7 @@ import { Customers } from './features/customers/customers';
 import { Dashboard } from './features/dashboard/dashboard';
 import { Inventories } from './features/inventories/inventories';
 import { Products } from './features/products/products';
+import { Reports } from './features/reports/reports';
 import { StockMovements } from './features/stock-movements/stock-movements';
 import { MainLayout } from './layouts/main-layout/main-layout';
 
@@ -43,6 +44,10 @@ export const routes: Routes = [
       {
         path: 'customer-orders',
         component: CustomerOrders,
+      },
+      {
+        path: 'reports',
+        component: Reports,
       },
       {
         path: 'live-market',

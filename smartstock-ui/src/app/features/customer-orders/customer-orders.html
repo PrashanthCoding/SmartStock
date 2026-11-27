@@ -111,7 +111,7 @@
             <td>
               <div class="customer-cell">
                 <div class="customer-avatar">
-                  {{ order.customerName?.charAt(0) || 'C' }}
+                  {{ order.customerName.charAt(0) || 'C' }}
                 </div>
                 <span>{{ order.customerName }}</span>
               </div>
@@ -119,7 +119,7 @@
 
             <td>{{ order.orderDateUtc | date: 'dd MMM yyyy' }}</td>
 
-            <td>{{ order.items?.length || 0 }} items</td>
+            <td>{{ order.items.length }} items</td>
 
             <td class="amount">
               {{ order.totalAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
