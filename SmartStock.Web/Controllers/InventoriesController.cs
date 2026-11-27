@@ -31,6 +31,7 @@ namespace SmartStock.Web.Controllers
                     x.ProductId,
                     ProductName = x.Product.ProductName,
                     x.Quantity,
+                    x.RowVersion,
                     x.CreatedAtUtc,
                     x.UpdatedAtUtc
                 })
@@ -163,10 +164,8 @@ namespace SmartStock.Web.Controllers
         [HttpGet("summary")]
         public async Task<IActionResult> GetInventorySummary()
         {
-            var totalProducts = await _context.Inventories
-                .Select(x => x.ProductId)
-                .Distinct()
-                .CountAsync();
+            var totalProducts = await _context.Products
+                .CountAsync(x => x.IsActive);
 
             var totalQuantity = await _context.Inventories
                 .SumAsync(x => (decimal?)x.Quantity) ?? 0;
@@ -180,14 +179,24 @@ namespace SmartStock.Web.Controllers
             var totalInventoryValue = await _context.Inventories
                 .SumAsync(x => (decimal?)(x.Quantity * x.Product.UnitPrice)) ?? 0;
 
-            return Ok(new
+            var totalCustomers = await _context.Customers
+                .CountAsync(x => x.IsActive);
+
+            var totalOrders = await _context.CustomerOrders
+                .CountAsync();
+
+            var response = new
             {
                 TotalProducts = totalProducts,
                 TotalQuantity = totalQuantity,
                 LowStockCount = lowStockCount,
                 OutOfStockCount = outOfStockCount,
-                TotalInventoryValue = totalInventoryValue
-            });
+                TotalInventoryValue = totalInventoryValue,
+                TotalCustomers = totalCustomers,
+                TotalOrders = totalOrders
+            };
+
+            return Ok(response);
         }
     }
 }

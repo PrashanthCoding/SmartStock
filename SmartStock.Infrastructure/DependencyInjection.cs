@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
 
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IReportService, ReportService>();
 
         // ======================================
         // JWT
