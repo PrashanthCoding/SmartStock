@@ -85,7 +85,7 @@ The project contains:
 | Framework | .NET 10 |
 | Frontend | Angular |
 | Language | C# / TypeScript |
-| Database | PostgreSQL |
+| Database | Microsoft SQL Server |
 | ORM | Entity Framework Core |
 | Authentication | JWT |
 | Real-time | SignalR |
