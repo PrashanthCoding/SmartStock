@@ -1,0 +1,101 @@
+<div class="market-page">
+  <div class="page-header">
+    <div>
+      <h2>Live Market</h2>
+      <p>Real-time cryptocurrency market overview</p>
+    </div>
+
+    <div class="connection-status">
+      <span class="status-dot" [ngClass]="connectionStatus.toLowerCase()"> </span>
+
+      {{ connectionStatus }}
+    </div>
+  </div>
+
+  <!-- Market Summary -->
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="card-label">Trading Pairs</div>
+      <h2>{{ totalPairs }}</h2>
+      <span>Live monitored assets</span>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-label">Positive Movers</div>
+      <h2 class="positive">{{ positiveMovers }}</h2>
+      <span>24h price increase</span>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-label">Negative Movers</div>
+      <h2 class="negative">{{ negativeMovers }}</h2>
+      <span>24h price decrease</span>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-label">Connection</div>
+      <h2 class="connection-text">
+        {{ connectionStatus }}
+      </h2>
+      <span>Market data stream</span>
+    </div>
+  </div>
+
+  <!-- Market Table -->
+
+  <div class="market-table-card">
+    <div class="table-header">
+      <div>
+        <h3>Cryptocurrency Prices</h3>
+        <p>Live Binance Spot market data</p>
+      </div>
+
+      <span class="live-label"> ● LIVE </span>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Trading Pair</th>
+            <th>Latest Price (USDT)</th>
+            <th>24h Change</th>
+            <th>24h Change %</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of marketData">
+            <td>
+              <strong>{{ item.symbol }}</strong>
+            </td>
+
+            <td class="price">${{ formatPrice(item.price) }}</td>
+
+            <td [ngClass]="item.priceChange >= 0 ? 'positive' : 'negative'">
+              {{ item.priceChange >= 0 ? '+' : '' }}
+              {{ formatPrice(item.priceChange) }}
+            </td>
+
+            <td>
+              <span class="change-badge" [ngClass]="item.priceChangePercent >= 0 ? 'up' : 'down'">
+                {{ item.priceChangePercent >= 0 ? '+' : '' }}
+                {{ item.priceChangePercent | number: '1.2-2' }}%
+              </span>
+            </td>
+
+            <td>
+              {{ item.lastUpdated | date: 'mediumTime' }}
+            </td>
+          </tr>
+
+          <tr *ngIf="marketData.length === 0">
+            <td colspan="5" class="empty-state">Waiting for live market data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

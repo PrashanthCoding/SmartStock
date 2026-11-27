@@ -1,0 +1,275 @@
+<div class="dashboard">
+  <!-- Page Heading -->
+  <div class="page-heading">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome back! Here's what's happening with your business.</p>
+    </div>
+
+    <div class="heading-actions">
+      <span class="date-label">SmartStock Overview</span>
+
+      <button class="refresh-btn" (click)="loadDashboard()" [disabled]="loading">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading && errorMessage) {
+    <div class="error-state">
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadDashboard()">Try Again</button>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (!loading && !errorMessage && inventorySummary) {
+    <!-- Statistics -->
+    <div class="stats-grid">
+      @for (stat of stats; track stat.title) {
+        <div class="stat-card">
+          <div class="stat-top">
+            <span>{{ stat.title }}</span>
+
+            <div class="stat-icon" [ngClass]="stat.color">
+              {{ stat.icon }}
+            </div>
+          </div>
+
+          <h2>{{ stat.value | number }}</h2>
+
+          <p>{{ stat.change }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Dashboard Overview -->
+    <div class="dashboard-grid">
+      <!-- Inventory Overview -->
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Inventory Overview</h3>
+            <p>Your current stock summary</p>
+          </div>
+
+          <span class="status">Live overview</span>
+        </div>
+
+        <div class="inventory-summary">
+          <div class="summary-number">
+            {{ inventorySummary.totalQuantity | number }}
+          </div>
+
+          <div>
+            <strong>Total units in stock</strong>
+
+            <p>
+              {{ inventorySummary.totalProducts }}
+              products with inventory records
+            </p>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="stockHealthPercentage"></div>
+        </div>
+
+        <p class="panel-note">Stock health: {{ stockHealthPercentage | number: '1.0-0' }}%</p>
+
+        <div class="inventory-value">
+          <span>Total Inventory Value</span>
+
+          <strong>
+            {{ totalInventoryValue | currency: 'INR' : 'symbol' : '1.2-2' }}
+          </strong>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Quick Actions</h3>
+            <p>Common management tasks</p>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button><span>＋</span> Add Product</button>
+          <button><span>↔</span> Stock Movement</button>
+          <button><span>♙</span> Add Customer</button>
+          <button><span>▤</span> Create Order</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Low Stock -->
+    <section class="panel recent-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>Low Stock Alerts</h3>
+          <p>Products requiring stock replenishment</p>
+        </div>
+
+        <span class="status"> {{ lowStockItems.length }} Items </span>
+      </div>
+
+      @if (lowStockItems.length > 0) {
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Available</th>
+                <th>Reorder Level</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (item of lowStockItems; track item.inventoryId) {
+                <tr>
+                  <td>{{ item.sku }}</td>
+                  <td>{{ item.productName }}</td>
+                  <td>{{ item.category }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.reorderLevel }}</td>
+                  <td>
+                    <span class="stock-badge" [class.out-of-stock]="item.quantity === 0">
+                      {{ item.stockStatus }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">✓</div>
+          <strong>No low stock products</strong>
+          <p>All inventory quantities are above their reorder levels.</p>
+        </div>
+      }
+    </section>
+
+    <!-- Recent Inventory Movements -->
+    <section class="panel recent-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>Recent Inventory Movements</h3>
+          <p>Your latest stock activities</p>
+        </div>
+      </div>
+
+      @if (movements.length > 0) {
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Movement Type</th>
+                <th>Previous Stock</th>
+                <th>Quantity</th>
+                <th>Current Stock</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (movement of movements; track movement.id) {
+                <tr>
+                  <td>{{ movement.productName }}</td>
+
+                  <td>
+                    <span class="stock-badge">
+                      {{ getMovementType(movement.movementType) }}
+                    </span>
+                  </td>
+                  <td>{{ movement.movementType }}</td>
+
+                  <td>{{ movement.quantityBefore }}</td>
+
+                  <td>{{ movement.quantity }}</td>
+
+                  <td>{{ movement.quantityAfter }}</td>
+
+                  <td>
+                    {{ movement.createdAtUtc | date: 'medium' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <!-- Recent Customer Orders -->
+        <section class="panel recent-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Recent Customer Orders</h3>
+              <p>Latest orders received from your customers</p>
+            </div>
+
+            <span class="status">{{ recentOrders.length }} Orders</span>
+          </div>
+
+          @if (recentOrders.length > 0) {
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order Number</th>
+                    <th>Customer</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                    <th>Total Amount</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (order of recentOrders; track order.id) {
+                    <tr>
+                      <td>{{ order.orderNumber }}</td>
+                      <td>{{ order.customerName }}</td>
+                      <td>{{ order.orderDateUtc | date: 'medium' }}</td>
+                      <td>
+                        <span class="stock-badge">
+                          {{ order.status }}
+                        </span>
+                      </td>
+                      <td>
+                        {{ order.totalAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-state">
+              <div class="empty-icon">▤</div>
+              <strong>No customer orders</strong>
+              <p>New customer orders will appear here.</p>
+            </div>
+          }
+        </section>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">▤</div>
+          <strong>No recent activity</strong>
+          <p>New stock movements will appear here.</p>
+        </div>
+      }
+    </section>
+  }
+</div>

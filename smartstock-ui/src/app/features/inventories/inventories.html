@@ -1,0 +1,177 @@
+<section class="inventory-page">
+  <div class="page-heading">
+    <div>
+      <h1>Inventory</h1>
+      <p>Monitor stock levels and manage your inventory.</p>
+    </div>
+
+    <button class="refresh-btn" (click)="refresh()">↻ Refresh</button>
+  </div>
+
+  <div class="alert success" *ngIf="successMessage">
+    {{ successMessage }}
+    <button (click)="successMessage = ''">×</button>
+  </div>
+
+  <div class="alert error" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="errorMessage = ''">×</button>
+  </div>
+
+  <div class="stats-grid" *ngIf="summary as data">
+    <div class="stat-card">
+      <div class="stat-icon purple">▣</div>
+      <div>
+        <span>Total Products</span>
+        <h2>{{ data.totalProducts }}</h2>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon blue">▤</div>
+      <div>
+        <span>Total Quantity</span>
+        <h2>{{ data.totalQuantity }}</h2>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">⚠</div>
+      <div>
+        <span>Low Stock</span>
+        <h2>{{ data.lowStockCount }}</h2>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon red">!</div>
+      <div>
+        <span>Out of Stock</span>
+        <h2>{{ data.outOfStockCount }}</h2>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">₹</div>
+      <div>
+        <span>Inventory Value</span>
+        <h2>{{ data.totalInventoryValue | currency: 'INR' : 'symbol' : '1.0-0' }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="low-stock-section">
+    <div class="section-heading">
+      <div>
+        <h2>Low Stock Alerts</h2>
+        <p>Products that need stock replenishment.</p>
+      </div>
+      <span class="alert-count">{{ lowStockItems.length }} Alerts</span>
+    </div>
+
+    <div class="low-stock-list" *ngIf="lowStockItems.length > 0">
+      <div class="low-stock-item" *ngFor="let item of lowStockItems">
+        <div class="warning-symbol">!</div>
+
+        <div class="low-stock-info">
+          <strong>{{ item.productName }}</strong>
+          <span>{{ item.sku }} · {{ item.category }}</span>
+        </div>
+
+        <div class="low-stock-quantity">
+          <strong>{{ item.quantity }}</strong>
+          <span>Current stock</span>
+        </div>
+
+        <div class="shortage">
+          <strong>{{ item.shortageQuantity }}</strong>
+          <span>Shortage</span>
+        </div>
+
+        <span class="stock-badge" [class.out]="item.stockStatus === 'Out of Stock'">
+          {{ item.stockStatus }}
+        </span>
+      </div>
+    </div>
+
+    <div class="no-alerts" *ngIf="lowStockItems.length === 0 && !loading">
+      <span>✓</span>
+      All products have sufficient stock.
+    </div>
+  </div>
+
+  <div class="inventory-card">
+    <div class="inventory-heading">
+      <div>
+        <h2>Inventory Overview</h2>
+        <p>View available quantity for each product.</p>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="search-box">
+        <span>⌕</span>
+        <input type="text" placeholder="Search product..." [(ngModel)]="search" />
+      </div>
+
+      <select [(ngModel)]="stockFilter">
+        <option value="">All Stock Status</option>
+        <option value="available">In Stock</option>
+        <option value="low">Low Stock</option>
+        <option value="out">Out of Stock</option>
+      </select>
+
+      <button class="reset-btn" (click)="clearFilters()">Reset</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>PRODUCT</th>
+            <th>PRODUCT ID</th>
+            <th>AVAILABLE QUANTITY</th>
+            <th>STOCK STATUS</th>
+            <th>LAST UPDATED</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="5" class="empty-state">Loading inventory...</td>
+          </tr>
+
+          <tr *ngIf="!loading && filteredInventories.length === 0">
+            <td colspan="5" class="empty-state">No inventory records found.</td>
+          </tr>
+
+          <tr *ngFor="let item of filteredInventories; trackBy: trackByInventoryId">
+            <td>
+              <strong class="product-name">{{ item.productName }}</strong>
+            </td>
+
+            <td>#{{ item.productId }}</td>
+
+            <td>
+              <strong class="quantity">{{ item.quantity }}</strong>
+            </td>
+
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(item)">
+                {{ getStockStatus(item) }}
+              </span>
+            </td>
+
+            <td>
+              {{ item.updatedAtUtc ? (item.updatedAtUtc | date: 'dd MMM yyyy, hh:mm a') : '—' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      Showing {{ filteredInventories.length }} of {{ inventories.length }} inventory records
+    </div>
+  </div>
+</section>

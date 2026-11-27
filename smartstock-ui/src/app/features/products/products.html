@@ -1,0 +1,278 @@
+<div class="products-page">
+  <div class="page-header">
+    <div>
+      <h1>Products</h1>
+      <p>Manage your product catalog, pricing and stock reorder levels.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="refresh()">↻ Refresh</button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Add Product</button>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success">
+      {{ successMessage }}
+      <button (click)="successMessage = ''">×</button>
+    </div>
+  }
+
+  @if (errorMessage && !showModal) {
+    <div class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input
+        type="search"
+        placeholder="Search SKU, product name..."
+        [(ngModel)]="search"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="btn btn-primary" (click)="onSearch()">Search</button>
+    </div>
+
+    <select [(ngModel)]="selectedCategory" (change)="onFilterChange()">
+      <option value="">All categories</option>
+      @for (category of categories; track category) {
+        <option [value]="category">{{ category }}</option>
+      }
+    </select>
+
+    <select [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+      <option value="">All statuses</option>
+      <option value="true">Active</option>
+      <option value="false">Inactive</option>
+    </select>
+
+    <button class="btn btn-outline" (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-card">
+    <div class="table-heading">
+      <h2>Product Catalog</h2>
+      <span>{{ totalCount }} products</span>
+    </div>
+
+    @if (loading) {
+      <div class="loading-state">Loading products...</div>
+    } @else if (products.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No products found</h3>
+        <p>Try changing your filters or add a new product.</p>
+        <button class="btn btn-primary" (click)="openCreateModal()">Add Product</button>
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th>Unit Price</th>
+              <th>Reorder Level</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (product of products; track product.id) {
+              <tr>
+                <td>
+                  <div class="product-name">{{ product.productName }}</div>
+                  <div class="product-description">
+                    {{ product.description || 'No description' }}
+                  </div>
+                </td>
+                <td>
+                  <span class="sku">{{ product.sku }}</span>
+                </td>
+                <td>{{ product.category }}</td>
+                <td class="price">
+                  {{ product.unitPrice | currency: 'INR' : 'symbol' : '1.2-2' }}
+                </td>
+                <td>{{ product.reorderLevel }}</td>
+                <td>
+                  <span class="status" [ngClass]="getStatusClass(product.isActive)">
+                    {{ product.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>{{ product.createdAtUtc | date: 'dd MMM yyyy' }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button
+                      class="icon-btn edit-btn"
+                      title="Edit product"
+                      [disabled]="!product.isActive"
+                      (click)="openEditModal(product)"
+                    >
+                      ✎
+                    </button>
+
+                    <button
+                      class="icon-btn delete-btn"
+                      title="Deactivate product"
+                      [disabled]="!product.isActive"
+                      (click)="confirmDeactivate(product)"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div class="pagination">
+      <span> Page {{ pageNumber }} of {{ totalPages || 1 }} </span>
+
+      <div>
+        <button
+          class="btn btn-outline"
+          [disabled]="pageNumber <= 1 || loading"
+          (click)="previousPage()"
+        >
+          Previous
+        </button>
+
+        <button
+          class="btn btn-outline"
+          [disabled]="pageNumber >= totalPages || loading"
+          (click)="nextPage()"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (showModal) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ isEditMode ? 'Edit Product' : 'Add Product' }}</h2>
+          <p>Enter the product information below.</p>
+        </div>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+
+      @if (errorMessage) {
+        <div class="alert alert-error">{{ errorMessage }}</div>
+      }
+
+      <form (ngSubmit)="saveProduct()" #productForm="ngForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>SKU *</label>
+            <input
+              name="sku"
+              [(ngModel)]="form.sku"
+              required
+              maxlength="50"
+              placeholder="e.g. PROD-001"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input
+              name="productName"
+              [(ngModel)]="form.productName"
+              required
+              maxlength="150"
+              placeholder="Enter product name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Category *</label>
+            <input
+              name="category"
+              [(ngModel)]="form.category"
+              required
+              maxlength="100"
+              placeholder="e.g. Electronics"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Unit Price (₹) *</label>
+            <input
+              type="number"
+              name="unitPrice"
+              [(ngModel)]="form.unitPrice"
+              required
+              min="0.01"
+              step="0.01"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Reorder Level *</label>
+            <input
+              type="number"
+              name="reorderLevel"
+              [(ngModel)]="form.reorderLevel"
+              required
+              min="0"
+              step="1"
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea
+              name="description"
+              [(ngModel)]="form.description"
+              maxlength="500"
+              rows="3"
+              placeholder="Enter product description"
+            >
+            </textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" [disabled]="saving" (click)="closeModal()">
+            Cancel
+          </button>
+
+          <button type="submit" class="btn btn-primary" [disabled]="saving || productForm.invalid">
+            {{ saving ? 'Saving...' : isEditMode ? 'Update Product' : 'Save Product' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (showDeleteModal && deletingProduct) {
+  <div class="modal-backdrop" (click)="cancelDeactivate()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">!</div>
+      <h2>Deactivate Product?</h2>
+      <p>
+        Are you sure you want to deactivate
+        <strong>{{ deletingProduct.productName }}</strong>?
+      </p>
+      <p class="confirm-note">This product will no longer be active.</p>
+
+      <div class="modal-actions">
+        <button class="btn btn-outline" (click)="cancelDeactivate()">Cancel</button>
+        <button class="btn btn-danger" (click)="deactivateProduct()">Deactivate</button>
+      </div>
+    </div>
+  </div>
+}

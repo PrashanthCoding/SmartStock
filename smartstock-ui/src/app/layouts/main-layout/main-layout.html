@@ -1,0 +1,74 @@
+<div class="app-layout">
+  <aside class="sidebar" [class.open]="menuOpen">
+    <div class="sidebar-brand">
+      <div class="brand-icon">S</div>
+      <span>SmartStock</span>
+    </div>
+
+    <div class="nav-label">MAIN MENU</div>
+
+    <nav>
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="menuOpen = false"
+      >
+        <span>▦</span> Dashboard
+      </a>
+
+      <a routerLink="/products" routerLinkActive="active" (click)="menuOpen = false">
+        <span>▣</span> Products
+      </a>
+
+      <a routerLink="/inventory" routerLinkActive="active" (click)="menuOpen = false">
+        <span>◫</span> Inventory
+      </a>
+
+      <a routerLink="/stock-movements" routerLinkActive="active" (click)="menuOpen = false">
+        <span>↔</span> Stock Movements
+      </a>
+
+      <div class="nav-label">MANAGEMENT</div>
+
+      <a routerLink="/customers" routerLinkActive="active" (click)="menuOpen = false">
+        <span>♙</span> Customers
+      </a>
+
+      <a routerLink="/customer-orders" routerLinkActive="active" (click)="menuOpen = false">
+        <span>▤</span> Customer Orders
+      </a>
+
+      <a routerLink="/reports" routerLinkActive="active" (click)="menuOpen = false">
+        <span>▥</span> Reports
+      </a>
+
+      <a routerLink="/live-market" routerLinkActive="active" (click)="menuOpen = false">
+        <span>⌁</span> Live Market
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <span>SmartStock v1.0</span>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <button class="menu-toggle" (click)="menuOpen = !menuOpen">☰</button>
+
+      <div class="top-title">Inventory Management</div>
+
+      <div class="user-profile">
+        <div class="avatar">P</div>
+        <span>Administrator</span>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" *ngIf="menuOpen" (click)="menuOpen = false"></div>
+</div>

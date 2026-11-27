@@ -1,0 +1,172 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: Inter, 'Segoe UI', Arial, sans-serif;
+}
+
+.app-layout {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.sidebar {
+  width: 250px;
+  background: #14233d;
+  color: white;
+  position: fixed;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.sidebar-brand {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+  gap: 12px;
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.nav-label {
+  color: #8192ad;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 700;
+  padding: 27px 25px 12px;
+}
+
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 4px 12px;
+  padding: 12px 14px;
+  color: #bdc9da;
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar nav a span {
+  width: 19px;
+  font-size: 17px;
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.active {
+  color: #fff;
+  background: #2d4770;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 22px 25px;
+  color: #8293ae;
+  font-size: 11px;
+}
+
+.main-area {
+  margin-left: 250px;
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 78px;
+  background: white;
+  border-bottom: 1px solid #e9edf4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.top-title {
+  color: #1c2b43;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #43516a;
+  font-size: 13px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #e8f0ff;
+  color: #3478f6;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 750;
+}
+
+.page-content {
+  padding: 30px;
+}
+
+.menu-toggle {
+  display: none;
+  border: 0;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #14233d;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-area {
+    margin-left: 0;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .top-title {
+    margin-right: auto;
+    font-size: 14px;
+  }
+
+  .user-profile span {
+    display: none;
+  }
+
+  .page-content {
+    padding: 18px;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 35, 0.45);
+    z-index: 15;
+  }
+}

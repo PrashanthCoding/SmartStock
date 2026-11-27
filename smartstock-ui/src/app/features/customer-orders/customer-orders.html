@@ -1,0 +1,344 @@
+<div class="orders-page">
+  <div class="page-heading">
+    <div>
+      <h1>Customer Orders</h1>
+      <p>Manage customer orders and track sales.</p>
+    </div>
+
+    <div class="heading-actions">
+      <button class="refresh-btn" (click)="refreshOrders()">↻ Refresh</button>
+
+      <button class="primary-btn" (click)="openCreateModal()">+ Create Order</button>
+    </div>
+  </div>
+
+  <div class="alert success" *ngIf="successMessage">
+    {{ successMessage }}
+    <button (click)="successMessage = ''">×</button>
+  </div>
+
+  <div class="alert error" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="errorMessage = ''">×</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon blue">▤</div>
+      <div>
+        <span>Total Orders</span>
+        <h2>{{ totalOrders }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon green">✓</div>
+      <div>
+        <span>Confirmed Orders</span>
+        <h2>{{ confirmedOrders }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon red">×</div>
+      <div>
+        <span>Cancelled Orders</span>
+        <h2>{{ cancelledOrders }}</h2>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon purple">₹</div>
+      <div>
+        <span>Total Sales</span>
+        <h2>{{ totalSales | currency: 'INR' : 'symbol' : '1.0-2' }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-panel">
+    <div class="search-box">
+      <span>⌕</span>
+      <input
+        type="text"
+        [(ngModel)]="searchText"
+        placeholder="Search order number or customer..."
+      />
+    </div>
+
+    <select [(ngModel)]="selectedStatus">
+      <option value="all">All Orders</option>
+      <option value="Confirmed">Confirmed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <!-- Orders table -->
+  <div class="table-card">
+    <div class="table-heading">
+      <div>
+        <h3>Order List</h3>
+        <p>View and manage customer orders</p>
+      </div>
+
+      <span class="record-count"> {{ filteredOrders.length }} orders </span>
+    </div>
+
+    <div class="loading" *ngIf="isLoading">Loading customer orders...</div>
+
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>ORDER NUMBER</th>
+            <th>CUSTOMER</th>
+            <th>ORDER DATE</th>
+            <th>ITEMS</th>
+            <th>TOTAL AMOUNT</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let order of filteredOrders">
+            <td>
+              <strong class="order-number">{{ order.orderNumber }}</strong>
+            </td>
+
+            <td>
+              <div class="customer-cell">
+                <div class="customer-avatar">
+                  {{ order.customerName?.charAt(0) || 'C' }}
+                </div>
+                <span>{{ order.customerName }}</span>
+              </div>
+            </td>
+
+            <td>{{ order.orderDateUtc | date: 'dd MMM yyyy' }}</td>
+
+            <td>{{ order.items?.length || 0 }} items</td>
+
+            <td class="amount">
+              {{ order.totalAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </td>
+
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                {{ getStatusText(order.status) }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+                <button class="view-btn" title="View order" (click)="viewOrder(order)">View</button>
+
+                <button
+                  *ngIf="getStatusText(order.status) === 'Confirmed'"
+                  class="cancel-btn"
+                  title="Cancel order"
+                  (click)="cancelOrder(order)"
+                >
+                  Cancel
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredOrders.length === 0">
+            <td colspan="7" class="empty-state">
+              <div class="empty-icon">▤</div>
+              <strong>No orders found</strong>
+              <p>Create an order or change your search filters.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create Order Modal -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div>
+        <h2>Create Customer Order</h2>
+        <p>Select a customer and add products.</p>
+      </div>
+
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="alert error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-group">
+        <label>Customer <span>*</span></label>
+
+        <select [(ngModel)]="orderForm.customerId">
+          <option [ngValue]="null">Select customer</option>
+          <option *ngFor="let customer of activeCustomers" [ngValue]="customer.id">
+            {{ customer.customerName }}
+          </option>
+        </select>
+
+        <small *ngIf="activeCustomers.length === 0"> No active customers available. </small>
+      </div>
+
+      <div class="items-heading">
+        <h3>Order Items</h3>
+        <button type="button" class="add-item-btn" (click)="addItem()">+ Add Item</button>
+      </div>
+
+      <div class="order-item-row" *ngFor="let item of orderForm.items; let i = index">
+        <div class="form-group product-field">
+          <label>Product {{ i + 1 }}</label>
+
+          <select [(ngModel)]="item.productId">
+            <option [ngValue]="null">Select product</option>
+            <option *ngFor="let product of activeProducts" [ngValue]="product.id">
+              {{ product.productName }} ({{ product.sku }})
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group quantity-field">
+          <label>Quantity</label>
+          <input type="number" min="1" step="1" [(ngModel)]="item.quantity" />
+        </div>
+
+        <div class="form-group price-field">
+          <label>Unit Price</label>
+          <div class="readonly-value">
+            {{ getItemProduct(item)?.unitPrice ?? 0 | currency: 'INR' : 'symbol' : '1.2-2' }}
+          </div>
+        </div>
+
+        <div class="form-group subtotal-field">
+          <label>Subtotal</label>
+          <div class="readonly-value">
+            {{ getItemTotal(item) | currency: 'INR' : 'symbol' : '1.2-2' }}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="remove-item-btn"
+          [disabled]="orderForm.items.length === 1"
+          (click)="removeItem(i)"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="no-products" *ngIf="activeProducts.length === 0">
+        No active products available. Please add products first.
+      </div>
+
+      <div class="order-total">
+        <span>Estimated Order Total</span>
+        <strong>{{ estimatedTotal | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+      </div>
+
+      <p class="info-text">Final pricing and stock availability are validated by the server.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeModal()">Cancel</button>
+
+      <button
+        class="primary-btn"
+        [disabled]="isSaving || activeCustomers.length === 0 || activeProducts.length === 0"
+        (click)="saveOrder()"
+      >
+        {{ isSaving ? 'Creating...' : 'Create Order' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal-backdrop" *ngIf="showDetailsModal">
+  <div class="modal-container details-modal">
+    <div class="modal-header">
+      <div>
+        <h2>Order Details</h2>
+        <p *ngIf="selectedOrder">{{ selectedOrder.orderNumber }}</p>
+      </div>
+
+      <button class="close-btn" (click)="closeDetailsModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="isLoadingDetails">Loading order details...</div>
+
+    <div class="modal-body" *ngIf="selectedOrder && !isLoadingDetails">
+      <div class="details-grid">
+        <div>
+          <label>Customer</label>
+          <strong>{{ selectedOrder.customerName }}</strong>
+        </div>
+
+        <div>
+          <label>Order Date</label>
+          <strong>{{ selectedOrder.orderDateUtc | date: 'dd MMM yyyy, hh:mm a' }}</strong>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.status)">
+            {{ getStatusText(selectedOrder.status) }}
+          </span>
+        </div>
+
+        <div>
+          <label>Order Number</label>
+          <strong>{{ selectedOrder.orderNumber }}</strong>
+        </div>
+      </div>
+
+      <h3 class="details-items-title">Products</h3>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>PRODUCT</th>
+              <th>SKU</th>
+              <th>QTY</th>
+              <th>UNIT PRICE</th>
+              <th>LINE TOTAL</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let item of selectedOrder.items">
+              <td>{{ item.productName }}</td>
+              <td>{{ item.sku }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unitPrice | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+              <td>{{ item.lineTotal | currency: 'INR' : 'symbol' : '1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="details-total">
+        <span>Total Amount</span>
+        <strong>{{ selectedOrder.totalAmount | currency: 'INR' : 'symbol' : '1.2-2' }}</strong>
+      </div>
+
+      <button
+        *ngIf="getStatusText(selectedOrder.status) === 'Confirmed'"
+        class="cancel-order-full"
+        (click)="cancelOrder(selectedOrder)"
+      >
+        Cancel This Order
+      </button>
+    </div>
+  </div>
+</div>
